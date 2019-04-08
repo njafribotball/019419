@@ -10,7 +10,7 @@ int main()
             camera_update();
             move_forward();
             printf("done");
-            //Go straight 
+            //Go straight
         }
         else
         {
@@ -18,7 +18,7 @@ int main()
             motor(1,-40);
             motor(2,40);
             //Turn Left
-        } 
+        }
     }
     /*while(1);
     {
