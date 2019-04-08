@@ -1,8 +1,13 @@
 #include <kipr/botball.h>
+
+
 void move_forward();
+
+
+
 int main()
 {
-    while(1)
+    while (1)
     {
         camera_update();
         if(get_object_count(1)>0) //find yellow
@@ -33,6 +38,8 @@ int main()
     }*/
     return 0;
 }
+
+
 void move_forward()
 {
     motor (1, 80);
