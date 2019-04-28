@@ -98,8 +98,8 @@ void drive(int left_motor_speed, int right_motor_speed, int time)
     printf("Driving: \n\tleft motor speed: %d right motor speed: %d\n\ttime: %d\n",
         left_motor_speed, right_motor_speed, time);
 
-    int left_speed = (left_motor_speed / abs(left_motor_speed)) * (left_motor_speed + LEFT_MOTOR_SPEED_ADJ);
-    int right_speed = (right_motor_speed / abs(right_motor_speed)) * (right_motor_speed + RIGHT_MOTOR_SPEED_ADJ);
+    int left_speed = (left_motor_speed / abs(left_motor_speed)) * (abs(left_motor_speed) + LEFT_MOTOR_SPEED_ADJ);
+    int right_speed = (right_motor_speed / abs(right_motor_speed)) * (abs(right_motor_speed) + RIGHT_MOTOR_SPEED_ADJ);
 
     int max_n = (left_speed >= right_speed) ? left_speed: right_speed;
     int min_n = (left_speed <= right_speed) ? left_speed: right_speed;
