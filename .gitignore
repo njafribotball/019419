@@ -1,0 +1,3 @@
+# Git ignores these files so committing wont be a problem.
+.DS_Store
+._*
