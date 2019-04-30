@@ -5,7 +5,7 @@
 
 #define ARM_PORT 3
 #define LEFT_MOTOR_PORT 3
-#define RIGHT_MOTOR_PORT 2
+#define RIGHT_MOTOR_PORT 0
 #define ROS_PORT 4
 #define LIGHT_SENSOR_PORT 5
 
@@ -14,10 +14,14 @@
 
 #define LEFT_MOTOR_SPEED_ADJ +2
 #define RIGHT_MOTOR_SPEED_ADJ -2
-#define TURNING_ANGLE_MULTIPLIER 9.798
+#define TURNING_ANGLE_MULTIPLIER 13
 
-#define BLACK_SURFACE_THRESHOLD 3550
+#define BLACK_SURFACE_THRESHOLD 3800
 #define GREY_SURFACE_THRESHOLD 3000
+
+#define CAMERA_CONFIG "botball2019"
+#define CAMERA_YELLOW_CHANNEL 0
+#define CAMERA_RED_CHANNEL 1
 
 #define DONE_STRING "                                            -->  done\n\n"
 
@@ -29,7 +33,9 @@ void drive_ticks(int left_motor_ticks, int right_motor_ticks,
                  int left_motor_speed, int right_motor_speed);
 void turn(int angle);
 void follow_line();
+int signal();
 void duration(int seconds, void (*prt) ());
+void forward_until_line(int threshold);
 
 int max(int a, int b);
 int min(int a, int b);
@@ -37,26 +43,37 @@ int min(int a, int b);
 
 int main()
 {
-    printf("Start\n");
+    printf("Start\n=====================================================\n");
 
     init();
 
-    printf("running\n");
+    printf("running\n=====================================================\n");
 
-    // set 10 seconds for running funcion follow_line using callback
-    void (*flw_ln) () = &follow_line;
-    duration(10, flw_ln);
+    arm_down();
+    dump();
+
+    //void (*flw_ln) () = &follow_line;
+    //duration(10, flw_ln);
     return 0;
 }
 
 
 void init()
 {
-    printf("Initiating\n");
+    printf("Initiating: \n");
     // enable all servo ports
     enable_servos();
 
     dump();
+}
+
+
+void forward_until_line(int threshold)
+{
+    while (analog(ROS_PORT) < threshold)
+    {
+        drive(50, 50, 10);
+    }
 }
 
 
@@ -98,8 +115,8 @@ void drive(int left_motor_speed, int right_motor_speed, int time)
     printf("Driving: \n\tleft motor speed: %d right motor speed: %d\n\ttime: %d\n",
         left_motor_speed, right_motor_speed, time);
 
-    int left_speed = (left_motor_speed / abs(left_motor_speed)) * (abs(left_motor_speed) + LEFT_MOTOR_SPEED_ADJ);
-    int right_speed = (right_motor_speed / abs(right_motor_speed)) * (abs(right_motor_speed) + RIGHT_MOTOR_SPEED_ADJ);
+    int left_speed = (left_motor_speed / abs(left_motor_speed)) * (left_motor_speed + LEFT_MOTOR_SPEED_ADJ);
+    int right_speed = (right_motor_speed / abs(right_motor_speed)) * (right_motor_speed + RIGHT_MOTOR_SPEED_ADJ);
 
     int max_n = (left_speed >= right_speed) ? left_speed: right_speed;
     int min_n = (left_speed <= right_speed) ? left_speed: right_speed;
@@ -182,5 +199,80 @@ void arm_down()
     	msleep(20);
     }
 
-    printf("done\n");
+    printf(DONE_STRING);
+}
+
+
+int signal()
+{
+    /*
+    return 1 for detecting the Yellow-Red signal square else return 0
+    */
+
+    int detected = 0;
+    if (camera_open () == 0)
+    {
+        printf ("\tFailed to open camera\n");
+        printf(DONE_STRING);
+        return 0;
+    }
+
+    if (camera_load_config (CAMERA_CONFIG) == 0)
+    {
+        printf ("Failed to load camera configuration\n");
+        camera_close();
+        msleep(500);
+        printf(DONE_STRING);
+
+        return 0;
+    }
+
+    msleep(1000);
+
+    // update camera 30 times to get more reliable sensor data
+    // while loop because for loop decleration not supported in current c compiler mode :(
+
+    printf("\tcamera update\n");
+    int i = 0;
+    while (i < 10)
+    {
+    	if (camera_update() == 0) {
+            printf("\tFailed to update camera on iteration %d\n", i);
+            camera_close();
+            msleep(500);
+
+            printf(DONE_STRING);
+
+            return 0;
+        }
+        msleep(50);
+        i++;
+    }
+
+    // test if yellow and red object exist
+    if (get_object_count (CAMERA_YELLOW_CHANNEL) != 0 && get_object_count (CAMERA_RED_CHANNEL) != 0)
+    {
+        // test if red square is in yellow square
+        struct rectangle yellow_rect = get_object_bbox (CAMERA_YELLOW_CHANNEL, 0);
+        struct rectangle red_rect = get_object_bbox (CAMERA_RED_CHANNEL, 0);
+
+        printf("\tYellow Square:\n\t\tx: %d, y: %d, w: %d, h: %d\n", yellow_rect.ulx, yellow_rect.uly, yellow_rect.width, yellow_rect.height);
+        printf("\tRed Square:\n\t\tx: %d, y: %d, w: %d, h: %d\n", red_rect.ulx, red_rect.uly, red_rect.width, red_rect.height);
+
+        if ((yellow_rect.ulx <= red_rect.ulx) &&
+            (yellow_rect.uly <= red_rect.uly) &&
+            (yellow_rect.ulx + yellow_rect.width >= red_rect.ulx + red_rect.width) &&
+            (yellow_rect.uly + yellow_rect.height >= red_rect.uly + red_rect.height))
+        {
+            detected = 1;
+        }
+    }
+
+    camera_close();
+    msleep(500);
+
+    printf("\tDetected: %s\n", detected);
+    printf(DONE_STRING);
+
+    return detected;
 }
