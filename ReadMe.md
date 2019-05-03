@@ -17,4 +17,4 @@
 * Mike He
 * Xin Huang
 
-[Our Presentation](https://docs.google.com/presentation/d/e/2PACX-1vQY9PqxGDDCeZDfoYIE7I4hD-PHeI8BPVtRVVUtEVVlRTnSMtM8BDqxaT4JXNzQ2a5-178wRFxSConf/pub?start=false&loop=false&delayms=3000)
+[OUR PRESENTATION](https://docs.google.com/presentation/d/e/2PACX-1vQY9PqxGDDCeZDfoYIE7I4hD-PHeI8BPVtRVVUtEVVlRTnSMtM8BDqxaT4JXNzQ2a5-178wRFxSConf/pub?start=false&loop=false&delayms=3000)
