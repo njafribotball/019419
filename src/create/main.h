@@ -1,9 +1,10 @@
+#include <kipr/botball.h>
 // Created on Fri May 3 2019
 
 // Replace FILE with your file's name
 #ifndef _main_H_
 #define _main_H_
-int Create_Vacs(int Mainb, int SideB, int Vac, int sec)
+int Create_Vacs(int Mainb, int SideB, int Vac)
 {
 
 	if (Mainb >= -127 && Mainb <= 127)
@@ -16,7 +17,6 @@ int Create_Vacs(int Mainb, int SideB, int Vac, int sec)
 						create_write_byte(Mainb);
 						create_write_byte(SideB);
 						create_write_byte(Vac);
-						msleep((sec*1000));
 					}
 			}
 
@@ -37,7 +37,7 @@ int Create_Full()
 }
 int Create_Led(int mode,int color, int brightness)
 {
-	if (Mainb >= 0 && Mainb <= 16)
+	if (mode >= 0 && mode <= 16)
 	{
 		if (color >= 0 && color <= 255)
 		{
