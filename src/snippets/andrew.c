@@ -24,7 +24,7 @@
 #define BLACK_SURFACE_THRESHOLD 3800
 #define GREY_SURFACE_THRESHOLD 3000
 
-#define CAMERA_CONFIG "botball2019"
+#define CAMERA_CONFIG "Botball2019"
 #define CAMERA_YELLOW_CHANNEL 0
 #define CAMERA_RED_CHANNEL 1
 
@@ -57,8 +57,7 @@ int main()
 	drive_ticks(2000, 2000, 1400, 1400);
     turn(-35);
     drive_ticks(4000, 4000, 1400, 1400);
-    turn(160);
-
+    turn(140);
 
     return 0;
 }
@@ -71,11 +70,15 @@ void init()
     enable_servos();
 
     arm_close();
+
+    // wait_for_light(LIGHT_SENSOR_PORT);
+    // shutdown_in(119);
 }
 
 
 void forward_until_line(int threshold)
 {
+    // drive forward until line detected belowed the threshold
     while (analog(ROS_PORT) < threshold)
     {
         drive(50, 50, 10);
@@ -85,7 +88,7 @@ void forward_until_line(int threshold)
 
 void turn_until_line(int direction, int low_threshold, int high_threshold)
 {
-    while (low_threshold < analog(ROS_PORT) < high_threshold)
+    while (low_threshold < analog(ROS_PORT) && analog(ROS_PORT) < high_threshold)
     {
         if (direction == 1)
             drive(50, -50, 10);
@@ -97,6 +100,7 @@ void turn_until_line(int direction, int low_threshold, int high_threshold)
 
 void duration(int seconds, void (*prt) ())
 {
+    // keep calling a function until speed limit exceeded
     time_t start_t, cur_t;
     time(&start_t);
     time(&cur_t);
@@ -120,21 +124,12 @@ void follow_line()
 }
 
 
-void backward_follow_line()
-{
-    if (analog(ROS_PORT) > BLACK_SURFACE_THRESHOLD)
-        drive(-50, -45, 10);
-    else if (GREY_SURFACE_THRESHOLD < analog(ROS_PORT) &&
-        analog(ROS_PORT) < BLACK_SURFACE_THRESHOLD)
-        drive(-25, -45, 10);
-}
-
-
 void turn(int angle)
 {
+    // negetive for turning to the left
     drive_ticks((int) angle * TURNING_ANGLE_MULTIPLIER,
                 (int) -angle * TURNING_ANGLE_MULTIPLIER,
-                700 * angle / abs(angle), 700 * -angle / abs(angle));
+                80 * angle / abs(angle), 80 * -angle / abs(angle));
 }
 
 
@@ -143,12 +138,15 @@ void drive(int left_motor_speed, int right_motor_speed, int time)
     printf("Driving: \n\tleft motor speed: %d right motor speed: %d\n\ttime: %d\n",
         left_motor_speed, right_motor_speed, time);
 
+    // adjustment for each motor speed since motor doesn't run at the same speed
     int left_speed = (left_motor_speed / abs(left_motor_speed)) * (abs(left_motor_speed) + LEFT_MOTOR_SPEED_ADJ);
     int right_speed = (right_motor_speed / abs(right_motor_speed)) * (abs(right_motor_speed) + RIGHT_MOTOR_SPEED_ADJ);
 
+    // calculate max and min to acoid exceeding [-100, 100] range
     int max_n = (left_speed >= right_speed) ? left_speed: right_speed;
     int min_n = (left_speed <= right_speed) ? left_speed: right_speed;
 
+    // adjustment for keeping speed in range
     int adj = 0;
     if (max_n > 100)
     	adj = 100 - max_n;
@@ -174,12 +172,15 @@ void drive_ticks(int left_motor_ticks, int right_motor_ticks, int left_motor_spe
     left_motor_ticks, left_motor_speed,
     right_motor_ticks, right_motor_speed);
 
+    // clear motor position counter
     cmpc(LEFT_MOTOR_PORT);
     cmpc(RIGHT_MOTOR_PORT);
 
+    // move left & right motor while target position not reached
     while (1) {
         int left_finished = 0;
 
+        // absolute value for both moving forward and backward
         if (abs(gmpc(LEFT_MOTOR_PORT)) < abs(left_motor_ticks))
         {
             motor(LEFT_MOTOR_PORT, left_motor_speed);
@@ -197,6 +198,8 @@ void drive_ticks(int left_motor_ticks, int right_motor_ticks, int left_motor_spe
         else
         {
             freeze(RIGHT_MOTOR_PORT);
+
+            // break when left motor finished job too
             if (left_finished)
                 break;
         }
@@ -325,6 +328,66 @@ int signal()
             detected = 1;
         }
     }
+
+    camera_close();
+    msleep(500);
+
+    printf("\tDetected: %d\n", detected);
+    printf(DONE_STRING);
+
+    return detected;
+}
+
+
+int simple_signal()
+{
+    /*
+    return 1 for detecting the Yellow-Red signal square else return 0
+    */
+
+    int detected = 0;
+    if (camera_open () == 0)
+    {
+        printf ("\tFailed to open camera\n");
+        printf(DONE_STRING);
+        return 0;
+    }
+
+    if (camera_load_config (CAMERA_CONFIG) == 0)
+    {
+        printf ("Failed to load camera configuration\n");
+        camera_close();
+        msleep(500);
+        printf(DONE_STRING);
+
+        return 0;
+    }
+
+    msleep(1000);
+
+    // update camera 30 times to get more reliable sensor data
+    // while loop because for loop decleration not supported in current c compiler mode :(
+
+    printf("\tcamera update\n");
+    int i = 0;
+    while (i < 10)
+    {
+    	if (camera_update() == 0) {
+            printf("\tFailed to update camera on iteration %d\n", i);
+            camera_close();
+            msleep(500);
+
+            printf(DONE_STRING);
+
+            return 0;
+        }
+        msleep(50);
+        i++;
+    }
+
+    // test if yellow and red object exist
+    if (get_object_count (CAMERA_YELLOW_CHANNEL) != 0)
+        detected = 1;
 
     camera_close();
     msleep(500);
