@@ -59,7 +59,6 @@ int main()
     drive_ticks(4000, 4000, 1400, 1400);
     turn(160);
 
-
     return 0;
 }
 
