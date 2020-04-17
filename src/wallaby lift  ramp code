@@ -1,0 +1,75 @@
+#include <kipr/botball.h>
+
+int main()
+{
+    printf("ramp down\n");
+   
+    #include <kipr/botball.h>
+    
+ //this program will put the ramp down 
+    //robot needs to start in the mineral lab turned 90 degrees to the right facing the ramp side of the board
+    //move forward ramp 
+    
+    motor(0,100);
+    //motor 0 full power
+    motor(1,100);
+    //motor 1 full power
+    msleep(3000);
+    //wait for 3 seconds 
+    
+    //turn left
+     motor(0,100);
+    //motor at 0 full power
+     motor(1,-100);
+    //motor 1 at negative full power 
+     msleep(2000);
+    //wait for 2 seconds 
+   
+    //move forward to the mineral lab
+    motor(0,100);
+    //motor 0 at negitive full power
+     motor(1,100);
+     //motor 1 at full power
+     msleep(2000);
+      //wait 2 seconds 
+    
+    printf("going up ramp\n");
+    // this program will take the robot up the ramp 
+    //robot will start from whee it ends 
+    
+     //turn left
+     motor(0,100);
+    //motor at 0 full power
+     motor(1,-100);
+    //motor 1 at negative full power 
+     msleep(2000);
+    //wait for 2 seconds 
+    
+     //move forward to the mineral lab
+    motor(0,100);
+    //motor 0 at negitive full power
+     motor(1,100);
+     //motor 1 at full power
+     msleep(2000);
+      //wait 2 seconds 
+    
+     //turn left
+     motor(0,100);
+    //motor at 0 full power
+     motor(1,-100);
+    //motor 1 at negative full power 
+     msleep(2000);
+    //wait for 2 seconds 
+    
+    //move up ramp 
+     motor(0,100);
+    //motor at 0 full power
+     motor(1,-100);
+    //motor 1 at negative full power 
+     msleep(3000);
+    
+    //turn off all motors
+    
+    ao();
+      return 0;
+}
